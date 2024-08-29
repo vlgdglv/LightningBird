@@ -1,0 +1,4 @@
+[submodule "sptag"]
+	path = sptag
+	url = https://github.com/vlgdglv/SPTAG
+	branch = CLR_core
