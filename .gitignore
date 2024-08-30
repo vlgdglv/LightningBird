@@ -1,4 +1,5 @@
 sptag/
+.vscode/
 
 # Prerequisites
 *.d
