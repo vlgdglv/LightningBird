@@ -2,11 +2,12 @@
 #define _COMMON_H_
 
 #include <vector>
+#include <iostream>
 
 struct Query{
     std::vector<int> ids;
     std::vector<float> values;
-    int query_length;
+    unsigned int query_length, qid;
 };
 
 struct PostingList{
@@ -15,39 +16,18 @@ struct PostingList{
     int key;
 };
 
+struct GroundtruthItem{
+    unsigned int qid;
+    std::vector<int> gts;
+};
+
 struct Item{
     int doc_id = -1;
     double scores = 0;
 };
 
-void load_query(const std::string& filename, std::vector<Query>& query)  {
-    query.clear();
-    std::ifstream file(filename, std::ios::binary);
-    if (!file) {
-        std::cerr << "Unable to open file\n";
-        return;
-    }
+void load_query(const std::string& filename, std::vector<Query>& query, bool has_value);
 
-    unsigned int num_queries;
-    file.read(reinterpret_cast<char*>(&num_queries), sizeof(num_queries));
+void load_groundtruth(const std::string& filename, std::vector<GroundtruthItem>& groundtruth);
 
-    for (unsigned int i = 0; i < num_queries; ++i) {
-        unsigned int query_length, ids_size, values_size;
-        file.read(reinterpret_cast<char*>(&query_length), sizeof(query_length));
-        file.read(reinterpret_cast<char*>(&ids_size), sizeof(ids_size));
-        std::vector<int> ids(ids_size / sizeof(int));
-        file.read(reinterpret_cast<char*>(ids.data()), ids_size);
-
-        file.read(reinterpret_cast<char*>(&values_size), sizeof(values_size));
-        std::vector<float> values(values_size / sizeof(float));
-        file.read(reinterpret_cast<char*>(values.data()), values_size);
-
-        Query query_item;
-        query_item.query_length = query_length;
-        query_item.ids = ids;
-        query_item.values = values;
-        query.push_back(query_item);
-    }
-    std::cout << "Total number of queries: " << num_queries << std::endl;
-}
 #endif

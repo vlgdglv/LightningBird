@@ -5,13 +5,13 @@ find_package(Boost 1.66 COMPONENTS system thread serialization program_options)
 
 include_directories(${Boost_INCLUDE_DIRS})
 include_directories(${PROJECT_SOURCE_DIR}/inc)
-include_directories(${PROJECT_SOURCE_DIR}/sptag/AnnService)
+# include_directories(${PROJECT_SOURCE_DIR}/sptag/AnnService)
 
 set(LIBRARYONLY ON CACHE BOOL "Only build libraries, no executables")
 
 # add_subdirectory(sptag)
 
-set(SOURCE_FILES src/main.cpp)
+set(SOURCE_FILES src/main.cpp src/index.cpp src/common.cpp)
 add_executable(LightningBird ${SOURCE_FILES})
 
 target_link_libraries(LightningBird  ${Boost_LIBRARIES}) # SPTAGLibStatic

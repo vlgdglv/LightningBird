@@ -9,10 +9,10 @@
 #include "common.h"
 
 
-class InvertIndex {
+class InvertedIndex {
 public:
-    InvertIndex() = default;
-    virtual ~InvertIndex() = default;
+    InvertedIndex() = default;
+    virtual ~InvertedIndex() = default;
 
     void load_posting_lists(const std::string& filename);
     std::vector<Item> retrieve(const Query& query, int topk = 100, double threshold = 0.0);

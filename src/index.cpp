@@ -3,11 +3,9 @@
 
 #include<algorithm>
 
-InvertIndex::InvertIndex() {}
 
-InvertIndex::~InvertIndex() {}
 
-void InvertIndex::load_posting_lists(const std::string& filename) {
+void InvertedIndex::load_posting_lists(const std::string& filename) {
     std::ifstream file(filename, std::ios::binary);
     if (!file) {
         std::cerr << "Unable to open file\n";
@@ -17,6 +15,7 @@ void InvertIndex::load_posting_lists(const std::string& filename) {
     unsigned int num_keys, total_docs;
     file.read(reinterpret_cast<char*>(&num_keys), sizeof(num_keys));
     file.read(reinterpret_cast<char*>(&total_docs), sizeof(total_docs));
+    std::cout << "Number of keys: " << num_keys << std::endl;
 
     for (unsigned int i = 0; i < num_keys; ++i) {
         unsigned int key, ids_size, values_size;
@@ -51,10 +50,10 @@ void InvertIndex::load_posting_lists(const std::string& filename) {
     m_total_docs = total_docs;
     file.close();
 
-    std::cout << "Total number of keys: " << num_keys << "\nTotal number of documents: " << total_docs << std::endl;
+    std::cout << "\nTotal number of documents: " << total_docs << std::endl;
 }
 
-std::vector<Item> InvertIndex::retrieve(const Query& query, int topk = 100, double threshold = 0.0) {
+std::vector<Item> InvertedIndex::retrieve(const Query& query, int topk, double threshold) {
     int query_len = query.query_length;
     int query_ids = 0; 
     double query_values = 0;
@@ -99,6 +98,6 @@ std::vector<Item> InvertIndex::retrieve(const Query& query, int topk = 100, doub
 }
 
 
-void InvertIndex::search_posting_lists() {
+void InvertedIndex::search_posting_lists() {
 
 }
