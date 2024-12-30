@@ -17,6 +17,7 @@ public:
     void load_posting_lists(const std::string& filename);
     std::vector<Item> retrieve(const Query& query, int topk = 100, double threshold = 0.0);
     void search_posting_lists();
+    std::vector<PostingList*> retrieve_posting_lists(const Query& query);
 
 private:
     std::vector<PostingList> m_posting_lists;

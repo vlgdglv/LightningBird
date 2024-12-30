@@ -52,4 +52,7 @@ void load_query(const std::string& filename, std::vector<Query>& query, bool has
 
 void load_groundtruth(const std::string& filename, std::vector<GroundtruthItem>& groundtruth);
 
+// void merge_posting_lists(std::vector<PostingList*>& pl1, Query& q1, 
+//                         std::vector<PostingList*>& pl2, Query& q2);
+
 #endif

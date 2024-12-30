@@ -4,7 +4,7 @@
 #include <boost/program_options.hpp>
 
 #include <iostream>
-
+#include <chrono>
 
 namespace po = boost::program_options;
 
@@ -96,5 +96,14 @@ int main(int argc, char* argv[]){
     VectorSet *query_embedding = new VectorSet(query_embedding_path);
     VectorSet *corpus_embedding = new VectorSet(corpus_embedding_path);
 
+    auto batchstart = std::chrono::high_resolution_clock::now();
+    for (int i=0;i<query_list.size();++i) {
+        std::vector<PostingList*> query_posting_lists = splade_index->retrieve_posting_lists(query_list[i]);
+        std::vector<PostingList*> posting_posting_lists = spann_index->retrieve_posting_lists(posting_list[i]);
+        
+    }
+    auto batchend = std::chrono::high_resolution_clock::now();
+    auto batchtime = std::chrono::duration_cast<std::chrono::milliseconds>(batchend - batchstart);
+    std::cout << "Batch time: " << batchtime.count() << " ms, Average time: " << 1.0 * batchtime.count() / query_list.size() << " ms" << std::endl;
     return 0;
 }
