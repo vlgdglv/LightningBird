@@ -1,5 +1,7 @@
 sptag/
 .vscode/
+data/
+build/
 
 # Prerequisites
 *.d

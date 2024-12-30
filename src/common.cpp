@@ -17,9 +17,9 @@ void load_query(const std::string& filename, std::vector<Query>& query, bool has
 
     for (unsigned int i = 0; i < num_queries; ++i) {
         Query query_item;
-        unsigned int query_length, ids_size, values_size, qid;
+        unsigned int query_length, ids_size, values_size;
         
-        file.read(reinterpret_cast<char*>(&qid), sizeof(qid));
+        // file.read(reinterpret_cast<char*>(&qid), sizeof(qid));
         file.read(reinterpret_cast<char*>(&query_length), sizeof(query_length));
         file.read(reinterpret_cast<char*>(&ids_size), sizeof(ids_size));
         std::vector<int> ids(ids_size / sizeof(int));
@@ -64,4 +64,25 @@ void load_groundtruth(const std::string& filename, std::vector<GroundtruthItem>&
         groundtruth.push_back(gt_item);
     }
     
+}
+
+
+VectorSet::VectorSet(const std::string& filename) {
+    std::ifstream file(filename, std::ios::binary);
+    if (!file) {
+        std::cerr << "Unable to open file\n";
+        return;
+    }
+
+    file.read(reinterpret_cast<char*>(&m_vector_num), sizeof(m_vector_num));
+    file.read(reinterpret_cast<char*>(&m_vector_dim), sizeof(m_vector_dim));
+    std::cout << "Number of vectors: " << m_vector_num << std::endl;
+    std::cout << "Vector dimension: " << m_vector_dim << std::endl;
+
+    for (unsigned int i = 0; i < m_vector_num; ++i) {
+        std::vector<float> data(m_vector_dim);
+        file.read(reinterpret_cast<char*>(data.data()), m_vector_dim * sizeof(float));
+        m_vectors.push_back(Embedding(new std::vector<float>(data)));
+    }
+    std::cout << "Finished loading vectors\n";
 }

@@ -26,6 +26,28 @@ struct Item{
     double scores = 0;
 };
 
+class Embedding{
+public:
+    Embedding(std::vector<float> *data): m_data(data) {};
+    virtual ~Embedding() = default;
+
+private:
+    std::vector<float> *m_data;
+};
+
+class VectorSet {
+public:
+    VectorSet() = default;
+    VectorSet(const std::string& filename);
+    virtual ~VectorSet() = default;
+    
+private:
+    unsigned int m_vector_num;
+    unsigned int m_vector_dim;
+    std::vector<Embedding> m_vectors;
+};
+
+
 void load_query(const std::string& filename, std::vector<Query>& query, bool has_value);
 
 void load_groundtruth(const std::string& filename, std::vector<GroundtruthItem>& groundtruth);
