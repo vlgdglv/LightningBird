@@ -87,9 +87,14 @@ int main(int argc, char* argv[]){
 
     std::vector<std::vector<Item>*> result_list;
     
-
-    auto batchstart = std::chrono::high_resolution_clock::now();
+    double total_time = 0;
     for (int i=0;i<query_list.size();++i) {
+        if (i % 100 == 0) {
+            std::cout << "Processing query #" << i << std::endl;
+        }
+        
+        auto batchstart = std::chrono::high_resolution_clock::now();
+
         MaxHeap result_queue;
         std::vector<PostingList*> query_posting_lists = splade_index->retrieve_posting_lists(query_list[i]);
         std::vector<PostingList*> spann_posting_lists = spann_index->retrieve_posting_lists(posting_list[i]);
@@ -148,7 +153,7 @@ int main(int argc, char* argv[]){
 
             if (splade_min_id == spann_min_id){
                 Item item;
-                item.doc_id = splade_min_id;
+                item.doc_id = plookup[splade_min_id];
                 double spann_score =  1.0 /(1e-6 + Embedding::euclidean_distance(query_embedding->get(i), corpus_embedding->get(splade_min_id)));
                 // std::cout << spann_score << " " << splade_min_value << std::endl;
                 item.scores = splade_weight * splade_min_value + spann_weight * spann_score;
@@ -162,12 +167,15 @@ int main(int argc, char* argv[]){
             }
         }
         result_list.push_back(result_queue.get_data(100));
+        
+        auto batchend = std::chrono::high_resolution_clock::now();
+        auto batchtime = std::chrono::duration_cast<std::chrono::milliseconds>(batchend - batchstart);
+        
+        total_time += batchtime.count();
     }
-    auto batchend = std::chrono::high_resolution_clock::now();
-    auto batchtime = std::chrono::duration_cast<std::chrono::milliseconds>(batchend - batchstart);
     
     double sptag_time = load_sptag_time(sptag_time_list_path);
-    double merge_time = 1.0 * batchtime.count() / query_list.size();
+    double merge_time = 1.0 * total_time / query_list.size();
     std::cout << "================= Search Complete ================" << std::endl;
     std::cout << "Average sptag time: " << sptag_time << " ms" << std::endl;
     std::cout << "Average merge time: " << merge_time << " ms" << std::endl;
@@ -175,6 +183,6 @@ int main(int argc, char* argv[]){
     
 
     std::cout << "================= Evaluation ================" << std::endl;
-    evaluation_and_print(groundtruth, result_list, qlookup);
+    evaluation_and_print(groundtruth, result_list, qlookup );
     return 0;
 }

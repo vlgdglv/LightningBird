@@ -12,13 +12,13 @@ void InvertedIndex::load_posting_lists(const std::string& filename) {
         return;
     }
 
-    unsigned int num_keys, total_docs;
+    int num_keys, total_docs;
     file.read(reinterpret_cast<char*>(&num_keys), sizeof(num_keys));
     file.read(reinterpret_cast<char*>(&total_docs), sizeof(total_docs));
-    std::cout << "Number of keys: " << num_keys << std::endl;
+    std::cout << "Number of keys: " << num_keys << ", docs to be load:" << total_docs << std::endl;
 
-    for (unsigned int i = 0; i < num_keys; ++i) {
-        unsigned int key, ids_size, values_size;
+    for (int i = 0; i < num_keys; ++i) {
+        int key, ids_size, values_size;
     
         file.read(reinterpret_cast<char*>(&key), sizeof(key));
         file.read(reinterpret_cast<char*>(&ids_size), sizeof(ids_size));
@@ -30,15 +30,7 @@ void InvertedIndex::load_posting_lists(const std::string& filename) {
         std::vector<float> values(values_size / sizeof(float));
         file.read(reinterpret_cast<char*>(values.data()), values_size);
 
-        // std::cout << "Key: " << key << "\nIDs: ";
-        // for (int id : ids) {
-        //     std::cout << id << " ";
-        // }
-        // std::cout << "\nValues: ";
-        // for (float value : values) {
-        //     std::cout << value << " ";
-        // }
-        // std::cout << std::endl;
+        std::cout << "Key: " << key << ", ids: " << ids.size() << ", values: " << values.size() << std::endl;
 
         PostingList posting_list;
         posting_list.key = key;
