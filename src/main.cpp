@@ -13,7 +13,7 @@ int main(int argc, char* argv[]){
     std::string splade_index_file_path, spann_index_file_path;
     std::string query_file_path, query_embedding_path, posting_file_path;
     std::string corpus_embedding_path, sptag_time_list_path;
-    std::string gt_file_path, qlookup_path, plookup_path;
+    std::string gt_file_path, qlookup_path, plookup_path, dist_func;
     double splade_weight, spann_weight;
     int topk;
     
@@ -31,6 +31,7 @@ int main(int argc, char* argv[]){
             ("spann_weight", po::value<double>(&spann_weight), "query file path")
             ("query_lookup_path", po::value<std::string>(&qlookup_path), "")
             ("corpus_lookup_path", po::value<std::string>(&plookup_path), "")
+            ("distance_func", po::value<std::string>(&dist_func), "")
             ("topk", po::value<int>(&topk), "topk")
 
             ("posting_path", po::value<std::string>(&posting_file_path), "query file path")    
@@ -57,6 +58,15 @@ int main(int argc, char* argv[]){
     // std::cout << "Query file path: " << query_file_path << std::endl;
     // std::cout << "Ground truth file path: " << gt_file_path << std::endl;
 
+    std::map<int, int> qlookup = std::map<int, int>();
+    std::map<int, int> plookup = std::map<int, int>();
+    bool has_qlookup = load_lookup(qlookup_path, qlookup);
+    bool has_plookup = load_lookup(plookup_path, plookup);
+
+    std::map<int, std::vector<int>*> groundtruth = std::map<int, std::vector<int>*>();
+    load_groundtruth(gt_file_path, groundtruth);
+    
+
     std::cout << "Load query ids..." << std::endl;
     std::vector<Query> query_list = std::vector<Query>();
     load_query(query_file_path, query_list, true);
@@ -73,20 +83,14 @@ int main(int argc, char* argv[]){
     InvertedIndex *spann_index = new InvertedIndex();
     spann_index->load_posting_lists(spann_index_file_path);
 
-    std::map<int, std::vector<int>*> groundtruth = std::map<int, std::vector<int>*>();
-    load_groundtruth(gt_file_path, groundtruth);
     
-    std::map<int, int> qlookup = std::map<int, int>();
-    std::map<int, int> plookup = std::map<int, int>();
-    load_lookup(qlookup_path, qlookup);
-    load_lookup(plookup_path, plookup);
-    
-  
     VectorSet *query_embedding = new VectorSet(query_embedding_path);
     VectorSet *corpus_embedding = new VectorSet(corpus_embedding_path);
 
     std::vector<std::vector<Item>*> result_list;
     
+    std::function<double(Embedding*, Embedding*)> dis_func = select_distance_function(dist_func); 
+
     double total_time = 0;
     for (int i=0;i<query_list.size();++i) {
         if (i % 100 == 0) {
@@ -153,8 +157,8 @@ int main(int argc, char* argv[]){
 
             if (splade_min_id == spann_min_id){
                 Item item;
-                item.doc_id = plookup[splade_min_id];
-                double spann_score =  1.0 /(1e-6 + Embedding::euclidean_distance(query_embedding->get(i), corpus_embedding->get(splade_min_id)));
+                item.doc_id = has_plookup? plookup[splade_min_id]: splade_min_id;
+                double spann_score =  dis_func(query_embedding->get(i), corpus_embedding->get(splade_min_id));
                 // std::cout << spann_score << " " << splade_min_value << std::endl;
                 item.scores = splade_weight * splade_min_value + spann_weight * spann_score;
                 result_queue.insert(item);
@@ -172,6 +176,7 @@ int main(int argc, char* argv[]){
         auto batchtime = std::chrono::duration_cast<std::chrono::milliseconds>(batchend - batchstart);
         
         total_time += batchtime.count();
+        if (i == 10) break;
     }
     
     double sptag_time = load_sptag_time(sptag_time_list_path);
@@ -181,7 +186,14 @@ int main(int argc, char* argv[]){
     std::cout << "Average merge time: " << merge_time << " ms" << std::endl;
     std::cout << "Average time: " << sptag_time + merge_time << " ms" << std::endl;
     
-
+    for (int i=0; i<10; ++i) {
+        std::cout << "query: " << qlookup[i] << ", top 10: " << std::endl;
+        std::vector<Item> items = *result_list[i];
+        for (int j=0; j<10; ++j) {
+            std::cout <<  items[j].doc_id << ", " ;
+        }
+        std::cout << std::endl;
+    }
     std::cout << "================= Evaluation ================" << std::endl;
     evaluation_and_print(groundtruth, result_list, qlookup );
     return 0;

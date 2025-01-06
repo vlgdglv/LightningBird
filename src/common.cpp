@@ -4,12 +4,12 @@
 #include <iostream>
 #include <math.h>
 
-void load_query(const std::string& filename, std::vector<Query>& query, bool has_value) {
+bool load_query(const std::string& filename, std::vector<Query>& query, bool has_value) {
     query.clear();
     std::ifstream file(filename, std::ios::binary);
     if (!file) {
         std::cerr << "Unable to open query file\n";
-        return;
+        return false;
     }
 
     unsigned int num_queries;
@@ -37,14 +37,15 @@ void load_query(const std::string& filename, std::vector<Query>& query, bool has
         }
         query.push_back(query_item);
     }
+    return true;
 }
 
-void load_groundtruth(const std::string& filename, std::map<int, std::vector<int>*>& groundtruth) {
+bool load_groundtruth(const std::string& filename, std::map<int, std::vector<int>*>& groundtruth) {
     groundtruth.clear();
     std::ifstream file(filename, std::ios::binary);
     if (!file) {
         std::cerr << "Unable to open groundtruth file\n";
-        return;
+        return false;
     }
 
     unsigned int num_gts;
@@ -61,14 +62,15 @@ void load_groundtruth(const std::string& filename, std::map<int, std::vector<int
         file.read(reinterpret_cast<char*>(gt_ids.data()), gts_size);
         groundtruth[qid] = new std::vector<int>(gt_ids);
     }
+    return true;
 }
 
-void load_lookup(const std::string& filename, std::map<int, int>& lookup) {
+bool load_lookup(const std::string& filename, std::map<int, int>& lookup) {
     lookup.clear();
     std::ifstream file(filename, std::ios::binary);
     if (!file) {
         std::cerr << "Unable to open lookup file\n";
-        return;
+        return false;
     }
 
     unsigned int num_entries, dim;
@@ -82,6 +84,7 @@ void load_lookup(const std::string& filename, std::map<int, int>& lookup) {
         lookup[i] = id;
     }
     std::cout << "Finished loading lookups\n";
+    return true;
 }
 
 double Embedding::cosine_similarity(Embedding *e1, Embedding *e2){
@@ -110,6 +113,31 @@ double Embedding::inner_product(Embedding *e1, Embedding *e2) {
         inner_product += e1->m_data->at(i) * e2->m_data->at(i);
     }
     return inner_product;
+}
+
+
+double euclidean_distance_score_reciprocal(Embedding *e1, Embedding *e2){
+    return 1.0 /(1e-6 + Embedding::euclidean_distance(e1, e2));
+}
+
+double euclidean_distance_score_opposite(Embedding *e1, Embedding *e2){
+    return -1.0 * Embedding::euclidean_distance(e1, e2);
+}
+
+double inner_product_score(Embedding *e1, Embedding *e2){
+    return Embedding::inner_product(e1, e2);
+}
+
+std::function<double(Embedding*, Embedding*)> select_distance_function(const std::string& dis_func) {
+    if (dis_func == "euclidean_reciprocal") {
+        return euclidean_distance_score_reciprocal;
+    } else if (dis_func == "euclidean_opposite") {
+        return euclidean_distance_score_opposite;
+    } else if (dis_func == "inner_product") {
+        return inner_product_score;
+    } else {
+        throw std::invalid_argument("Unknown distance function: " + dis_func);
+    }
 }
 
 VectorSet::VectorSet(const std::string& filename) {

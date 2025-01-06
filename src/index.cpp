@@ -30,7 +30,7 @@ void InvertedIndex::load_posting_lists(const std::string& filename) {
         std::vector<float> values(values_size / sizeof(float));
         file.read(reinterpret_cast<char*>(values.data()), values_size);
 
-        std::cout << "Key: " << key << ", ids: " << ids.size() << ", values: " << values.size() << std::endl;
+        // std::cout << "Key: " << key << ", ids: " << ids.size() << ", values: " << values.size() << std::endl;
 
         PostingList posting_list;
         posting_list.key = key;

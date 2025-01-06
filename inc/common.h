@@ -4,6 +4,7 @@
 #include <vector>
 #include <iostream>
 #include <map>
+#include <functional> 
 #define INF 999999999
 
 struct Query{
@@ -42,6 +43,17 @@ public:
 private:
     std::vector<float> *m_data;
 };
+
+
+
+double euclidean_distance_score_reciprocal(Embedding *e1, Embedding *e2);
+
+double euclidean_distance_score_opposite(Embedding *e1, Embedding *e2);
+
+double inner_product_score(Embedding *e1, Embedding *e2);
+
+std::function<double(Embedding*, Embedding*)> select_distance_function(const std::string& dis_func);
+
 
 class VectorSet {
 public:
@@ -145,11 +157,11 @@ public:
     Item& operator [](int idx) { return heap[idx]; }
 };
 
-void load_query(const std::string& filename, std::vector<Query>& query, bool has_value);
+bool load_query(const std::string& filename, std::vector<Query>& query, bool has_value);
 
-void load_groundtruth(const std::string& filename, std::map<int, std::vector<int>*>& groundtruth);
+bool load_groundtruth(const std::string& filename, std::map<int, std::vector<int>*>& groundtruth);
 
-void load_lookup(const std::string& filename, std::map<int, int>& lookup);
+bool load_lookup(const std::string& filename, std::map<int, int>& lookup);
 
 void evaluation_and_print(std::map<int, std::vector<int>*> groundtruth, std::vector<std::vector<Item>*> result_list, std::map<int, int>& qlookup);
 

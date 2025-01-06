@@ -2,7 +2,7 @@
 
 cd build
 
-BASE_DIR=/datacosmos/local/User/baoht/onesparse2/marcov2
+BASE_DIR=/datacosmos/User/baoht/onesparse2/marcov2
 ./LightningBird \
     --splade_index_path $BASE_DIR/index/bm25_test_cut/bm25_inverted_index.bin \
     --spann_index_path $BASE_DIR/spann/bs_SimANS_8_invertedIndex/inverted_index.bin \
@@ -15,5 +15,5 @@ BASE_DIR=/datacosmos/local/User/baoht/onesparse2/marcov2
     --sptag_time_list_path $BASE_DIR/spann/bs_SimANS_8_invertedIndex/time_list.bin \
     --gt_path $BASE_DIR/data/qrels_test.bin   \
     --splade_weight 1.0 \
-    --spann_weight 10000.0 \
-    --topk 100
+    --spann_weight 1.0 \
+    --topk 100 --distance_func inner_product
