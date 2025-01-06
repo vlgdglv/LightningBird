@@ -97,7 +97,7 @@ private:
 
 public:
     // Insert a new item into the heap
-    void insert(const Item& item) {
+    void insert(Item& item) {
         heap.push_back(item);
         heapify_up(heap.size() - 1);
     }
@@ -134,6 +134,14 @@ public:
 
     std::vector<Item>* get_data() { return &heap; }
 
+    std::vector<Item>* get_data(int top) {
+        std::vector<Item>* data = new std::vector<Item>();
+        for (int i=0; i<std::min(top, (int)heap.size()); ++i) {
+            data->push_back(extract_max());
+        }
+        return data;
+    }
+
     Item& operator [](int idx) { return heap[idx]; }
 };
 
@@ -146,6 +154,8 @@ void load_lookup(const std::string& filename, std::map<int, int>& lookup);
 void evaluation_and_print(std::map<int, std::vector<int>*> groundtruth, std::vector<std::vector<Item>*> result_list, std::map<int, int>& qlookup);
 
 bool check_is_in(std::vector<int> vec, int id);
+
+double load_sptag_time(const std::string& filename);
 // void merge_posting_lists(std::vector<PostingList*>& pl1, Query& q1, 
 //                         std::vector<PostingList*>& pl2, Query& q2);
 

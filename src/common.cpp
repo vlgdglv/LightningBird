@@ -98,7 +98,8 @@ double Embedding::cosine_similarity(Embedding *e1, Embedding *e2){
 double Embedding::euclidean_distance(Embedding *e1, Embedding *e2) {
     double distance = 0;
     for (int i = 0; i < e1->m_data->size(); ++i) {
-        distance += (e1->m_data->at(i) - e2->m_data->at(i)) * (e1->m_data->at(i) - e2->m_data->at(i));
+        double x1 = e1->m_data->at(i), x2 = e2->m_data->at(i);
+        distance += (x1 - x2) * (x1 - x2);
     }
     // ignore sqrt
     return distance;
@@ -135,11 +136,11 @@ void evaluation_and_print(std::map<int, std::vector<int>*> groundtruth, std::vec
     int MaxMRRRank = 10;
     std::vector<int> Recall1, Recall5, Recall10, Recall20, Recall100, MAP; 
     double MRR = 0.0;
+    std::cout << "Evaluating " << result_list.size() << " results" << std::endl;
     for (int i=0; i<result_list.size(); ++i) {
         int qid = qlookup[i];
         std::vector<int> gts = *groundtruth[qid];
         std::vector<Item> items = *result_list[i];
-
         int length = std::min(MaxMRRRank, (int)items.size());
         
         for (int j=0; j<length; ++j) {
@@ -160,6 +161,7 @@ void evaluation_and_print(std::map<int, std::vector<int>*> groundtruth, std::vec
             }
         }
     }
+
     double denominator = result_list.size();
     std::cout << "MRR: " << MRR / denominator << std::endl;
     std::cout << "Recall@1: " << Recall1.size() / denominator << std::endl;
@@ -176,4 +178,22 @@ bool check_is_in(std::vector<int> vec, int id) {
         }
     }
     return false;
+}
+
+
+double load_sptag_time(const std::string& filename){
+    std::ifstream file(filename, std::ios::binary);
+    if (!file) {
+        std::cerr << "Unable to open time list\n";
+        return 0;
+    }
+    float time_sum = 0;
+    unsigned int total;
+    file.read(reinterpret_cast<char*>(&total), sizeof(total));
+    for (unsigned int i = 0; i < total; ++i) {
+        float time;
+        file.read(reinterpret_cast<char*>(&time), sizeof(time));
+        time_sum += time;
+    }
+    return 1000.0 * time_sum/total;
 }
