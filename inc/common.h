@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <iostream>
+#include <map>
 #define INF 999999999
 
 struct Query{
@@ -25,6 +26,9 @@ struct GroundtruthItem{
 struct Item{
     int doc_id = -1;
     double scores = 0;
+    bool operator<(const Item& other) const {
+        return scores < other.scores;
+    }
 };
 
 class Embedding{
@@ -32,6 +36,9 @@ public:
     Embedding(std::vector<float> *data): m_data(data) {};
     virtual ~Embedding() = default;
 
+    static double cosine_similarity(Embedding *e1, Embedding *e2);
+    static double euclidean_distance(Embedding *e1, Embedding *e2);
+    static double inner_product(Embedding *e1, Embedding *e2);
 private:
     std::vector<float> *m_data;
 };
@@ -41,18 +48,104 @@ public:
     VectorSet() = default;
     VectorSet(const std::string& filename);
     virtual ~VectorSet() = default;
-    
+    Embedding* get(unsigned int idx) { return &m_vectors[idx]; }
 private:
     unsigned int m_vector_num;
     unsigned int m_vector_dim;
     std::vector<Embedding> m_vectors;
 };
 
+class MaxHeap {
+private:
+    std::vector<Item> heap;
+
+    // Heapify up: Maintain the heap property after insertion
+    void heapify_up(int index) {
+        while (index > 0) {
+            int parent = (index - 1) / 2;
+            if (heap[index].scores > heap[parent].scores) {
+                std::swap(heap[index], heap[parent]);
+                index = parent;
+            } else {
+                break;
+            }
+        }
+    }
+
+    // Heapify down: Maintain the heap property after deletion
+    void heapify_down(int index) {
+        int size = heap.size();
+        while (true) {
+            int left = 2 * index + 1;
+            int right = 2 * index + 2;
+            int largest = index;
+
+            if (left < size && heap[left].scores > heap[largest].scores) {
+                largest = left;
+            }
+            if (right < size && heap[right].scores > heap[largest].scores) {
+                largest = right;
+            }
+            if (largest != index) {
+                std::swap(heap[index], heap[largest]);
+                index = largest;
+            } else {
+                break;
+            }
+        }
+    }
+
+public:
+    // Insert a new item into the heap
+    void insert(const Item& item) {
+        heap.push_back(item);
+        heapify_up(heap.size() - 1);
+    }
+
+    // Remove and return the top item (maximum score)
+    Item extract_max() {
+        if (heap.empty()) {
+            throw std::runtime_error("Heap is empty");
+        }
+        Item max_item = heap[0];
+        heap[0] = heap.back();
+        heap.pop_back();
+        heapify_down(0);
+        return max_item;
+    }
+
+    // Peek at the top item without removing it
+    const Item& peek() const {
+        if (heap.empty()) {
+            throw std::runtime_error("Heap is empty");
+        }
+        return heap[0];
+    }
+
+    // Check if the heap is empty
+    bool empty() const {
+        return heap.empty();
+    }
+
+    // Get the size of the heap
+    size_t size() const {
+        return heap.size();
+    }
+
+    std::vector<Item>* get_data() { return &heap; }
+
+    Item& operator [](int idx) { return heap[idx]; }
+};
 
 void load_query(const std::string& filename, std::vector<Query>& query, bool has_value);
 
-void load_groundtruth(const std::string& filename, std::vector<GroundtruthItem>& groundtruth);
+void load_groundtruth(const std::string& filename, std::map<int, std::vector<int>*>& groundtruth);
 
+void load_lookup(const std::string& filename, std::map<int, int>& lookup);
+
+void evaluation_and_print(std::map<int, std::vector<int>*> groundtruth, std::vector<std::vector<Item>*> result_list, std::map<int, int>& qlookup);
+
+bool check_is_in(std::vector<int> vec, int id);
 // void merge_posting_lists(std::vector<PostingList*>& pl1, Query& q1, 
 //                         std::vector<PostingList*>& pl2, Query& q2);
 

@@ -9,4 +9,7 @@ DATA_DIR=../data/bs4lb
     --query_path $DATA_DIR/query_ids.fbin \
     --posting_path $DATA_DIR/spann_query.bin \
     --query_embedding_path $DATA_DIR/marco_query.fbin \
-    --corpus_embedding_path $DATA_DIR/marco_doc.fbin
+    --corpus_embedding_path $DATA_DIR/marco_doc.fbin \
+    --query_lookup_path $DATA_DIR/marco_query.ibin \
+    --corpus_lookup_path $DATA_DIR/marco_doc.ibin \
+    --gt_path ../data/qrels.bin

@@ -2,7 +2,7 @@
 #include "index.h"
 #include "common.h"
 #include <boost/program_options.hpp>
-
+#include <queue>
 #include <iostream>
 #include <chrono>
 
@@ -13,7 +13,8 @@ int main(int argc, char* argv[]){
     std::string splade_index_file_path, spann_index_file_path;
     std::string query_file_path, query_embedding_path, posting_file_path;
     std::string corpus_embedding_path;
-    std::string gt_file_path;
+    std::string gt_file_path, qlookup_path, plookup_path;
+    double splade_weight, spann_weight;
     
     try {
         po::options_description desc("Allowed options");
@@ -25,7 +26,11 @@ int main(int argc, char* argv[]){
             ("query_path", po::value<std::string>(&query_file_path), "query file path")    
             ("query_embedding_path", po::value<std::string>(&query_embedding_path), "query file path")
             ("corpus_embedding_path", po::value<std::string>(&corpus_embedding_path), "query file path")
-            
+            ("splade_weight", po::value<double>(&splade_weight), "query file path")
+            ("spann_weight", po::value<double>(&spann_weight), "query file path")
+            ("query_lookup_path", po::value<std::string>(&qlookup_path), "")
+            ("corpus_lookup_path", po::value<std::string>(&plookup_path), "")
+
             ("posting_path", po::value<std::string>(&posting_file_path), "query file path")    
             ("gt_path", po::value<std::string>(&gt_file_path), "ground truth file path")    
         ;
@@ -82,8 +87,8 @@ int main(int argc, char* argv[]){
     InvertedIndex *spann_index = new InvertedIndex();
     spann_index->load_posting_lists(spann_index_file_path);
 
-    // std::vector<GroundtruthItem> groundtruth = std::vector<GroundtruthItem>();
-    // load_groundtruth(gt_file_path, groundtruth);
+    std::map<int, std::vector<int>*> groundtruth = std::map<int, std::vector<int>*>();
+    load_groundtruth(gt_file_path, groundtruth);
 
     // std::cout << "Ground truth check: " << std::endl;
     // for (int i=0;i<10;++i) {    
@@ -94,11 +99,20 @@ int main(int argc, char* argv[]){
     //     std::cout << std::endl;
     // }
     
-    // VectorSet *query_embedding = new VectorSet(query_embedding_path);
-    // VectorSet *corpus_embedding = new VectorSet(corpus_embedding_path);
+    std::map<int, int> qlookup = std::map<int, int>();
+    std::map<int, int> plookup = std::map<int, int>();
+    load_lookup(qlookup_path, qlookup);
+    load_lookup(plookup_path, plookup);
+
+    VectorSet *query_embedding = new VectorSet(query_embedding_path);
+    VectorSet *corpus_embedding = new VectorSet(corpus_embedding_path);
+
+    std::vector<std::vector<Item>*> result_list;
+    MaxHeap result_queue;
 
     auto batchstart = std::chrono::high_resolution_clock::now();
     for (int i=0;i<query_list.size();++i) {
+        result_queue.empty();
         std::vector<PostingList*> query_posting_lists = splade_index->retrieve_posting_lists(query_list[i]);
         std::vector<PostingList*> spann_posting_lists = spann_index->retrieve_posting_lists(posting_list[i]);
         
@@ -156,8 +170,11 @@ int main(int argc, char* argv[]){
             }
 
             if (splade_min_id == spann_min_id){
-                // add candidate
-                result.push_back(splade_min_id);
+                Item item;
+                item.doc_id = plookup[splade_min_id];
+                item.scores = splade_weight * splade_min_value + spann_weight * 1.0 /(1.0 + Embedding::euclidean_distance(query_embedding->get(i), corpus_embedding->get(splade_min_id)));
+                result_queue.insert(item);
+
                 current_docid = splade_min_id;
                 for (int j=0;j<splade_posting_ids.size();++j)  splade_cursors[splade_posting_ids[j]] += 1;
                 for (int j=0;j<spann_posting_ids.size();++j)  spann_cursors[spann_posting_ids[j]] += 1;
@@ -165,14 +182,13 @@ int main(int argc, char* argv[]){
                 current_docid = std::max(splade_min_id, spann_min_id);
             }
         }
-
-        // for (int i=0;i < 20; ++i) {
-        //     std::cout << result[i] << " ";
-        // }
-        // std::cout << std::endl;
+        result_list.push_back(result_queue.get_data());  
+        break;
     }
     auto batchend = std::chrono::high_resolution_clock::now();
     auto batchtime = std::chrono::duration_cast<std::chrono::milliseconds>(batchend - batchstart);
     std::cout << "Batch time: " << batchtime.count() << " ms, Average time: " << 1.0 * batchtime.count() / query_list.size() << " ms" << std::endl;
+    
+    evaluation_and_print(groundtruth, result_list, qlookup);
     return 0;
 }
