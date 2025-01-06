@@ -93,14 +93,83 @@ int main(int argc, char* argv[]){
     //     }
     //     std::cout << std::endl;
     // }
-    VectorSet *query_embedding = new VectorSet(query_embedding_path);
-    VectorSet *corpus_embedding = new VectorSet(corpus_embedding_path);
+    
+    // VectorSet *query_embedding = new VectorSet(query_embedding_path);
+    // VectorSet *corpus_embedding = new VectorSet(corpus_embedding_path);
 
     auto batchstart = std::chrono::high_resolution_clock::now();
     for (int i=0;i<query_list.size();++i) {
         std::vector<PostingList*> query_posting_lists = splade_index->retrieve_posting_lists(query_list[i]);
-        std::vector<PostingList*> posting_posting_lists = spann_index->retrieve_posting_lists(posting_list[i]);
+        std::vector<PostingList*> spann_posting_lists = spann_index->retrieve_posting_lists(posting_list[i]);
         
+        int current_docid = -1;
+
+        std::vector<int> splade_cursors = std::vector<int>(query_posting_lists.size(), 0);
+        std::vector<int> spann_cursors = std::vector<int>(spann_posting_lists.size(), 0);
+
+        std::vector<int> result = std::vector<int>();
+        while(1){
+            int splade_min_id = INF, splade_min_value = 0;
+            std::vector<int> splade_posting_ids = std::vector< int>();
+            int length = query_posting_lists.size();
+            for(int j=0; j<length; ++j){
+                int cursor = splade_cursors[j], posting_list_size = query_posting_lists[j]->ids.size();
+                while (cursor < posting_list_size && query_posting_lists[j]->ids[cursor] < current_docid)
+                    ++cursor;
+                splade_cursors[j] = cursor;
+                if (cursor < posting_list_size){
+                    if (query_posting_lists[j]->ids[cursor] < splade_min_id){
+                        splade_min_id = query_posting_lists[j]->ids[cursor];
+                        splade_min_value = query_posting_lists[j]->values[cursor] * query_list[i].values[j];
+                        splade_posting_ids.clear();
+                        splade_posting_ids.push_back(j);
+                    }else if (query_posting_lists[j]->ids[cursor] == splade_min_id){
+                        splade_min_value += query_posting_lists[j]->values[cursor] * query_list[i].values[j];
+                        splade_posting_ids.push_back(j);
+                    }
+                }
+            }
+
+            int spann_min_id = INF, spann_min_value = 0;
+            std::vector<int> spann_posting_ids = std::vector< int>();
+            length = spann_posting_lists.size();
+            for(int j=0; j<length; ++j){
+                int cursor = spann_cursors[j], posting_list_size = spann_posting_lists[j]->ids.size();
+                while (cursor < posting_list_size && spann_posting_lists[j]->ids[cursor] < current_docid)
+                    ++cursor;
+                spann_cursors[j] = cursor;
+                if (cursor < posting_list_size){
+                    if (spann_posting_lists[j]->ids[cursor] < spann_min_id){
+                        spann_min_id = spann_posting_lists[j]->ids[cursor];
+                        // spann_min_value = posting_posting_lists[j]->values[cursor];
+                        spann_posting_ids.clear();
+                        spann_posting_ids.push_back(j);
+                    }else if (spann_posting_lists[j]->ids[cursor] == spann_min_id){
+                        // spann_min_value += posting_posting_lists[j]->values[cursor];
+                        spann_posting_ids.push_back(j);
+                    }
+                }
+            }
+
+            if (splade_min_id == INF && spann_min_id == INF){
+                break;
+            }
+
+            if (splade_min_id == spann_min_id){
+                // add candidate
+                result.push_back(splade_min_id);
+                current_docid = splade_min_id;
+                for (int j=0;j<splade_posting_ids.size();++j)  splade_cursors[splade_posting_ids[j]] += 1;
+                for (int j=0;j<spann_posting_ids.size();++j)  spann_cursors[spann_posting_ids[j]] += 1;
+            }else{
+                current_docid = std::max(splade_min_id, spann_min_id);
+            }
+        }
+
+        // for (int i=0;i < 20; ++i) {
+        //     std::cout << result[i] << " ";
+        // }
+        // std::cout << std::endl;
     }
     auto batchend = std::chrono::high_resolution_clock::now();
     auto batchtime = std::chrono::duration_cast<std::chrono::milliseconds>(batchend - batchstart);

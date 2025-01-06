@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <iostream>
+#define INF 999999999
 
 struct Query{
     std::vector<int> ids;
