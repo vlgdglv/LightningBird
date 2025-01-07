@@ -94,8 +94,10 @@ std::vector<PostingList*> InvertedIndex::retrieve_posting_lists(const Query& que
     std::vector<PostingList*> result;
     for (int i=0; i<query.query_length; ++i) {
         int query_ids = query.ids[i];
-        int posting_idx = m_key_to_idx[query_ids];
-        result.push_back(&m_posting_lists[posting_idx]);
+        try{
+            int posting_idx = m_key_to_idx.at(query_ids);
+            result.push_back(&m_posting_lists[posting_idx]);
+        }catch (const std::out_of_range& e) {}
     }
     return result;
 }

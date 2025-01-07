@@ -40,7 +40,7 @@ public:
     static double cosine_similarity(Embedding *e1, Embedding *e2);
     static double euclidean_distance(Embedding *e1, Embedding *e2);
     static double inner_product(Embedding *e1, Embedding *e2);
-private:
+// private:
     std::vector<float> *m_data;
 };
 

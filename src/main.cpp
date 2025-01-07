@@ -63,18 +63,30 @@ int main(int argc, char* argv[]){
     bool has_qlookup = load_lookup(qlookup_path, qlookup);
     bool has_plookup = load_lookup(plookup_path, plookup);
 
-    std::map<int, std::vector<int>*> groundtruth = std::map<int, std::vector<int>*>();
-    load_groundtruth(gt_file_path, groundtruth);
-    
-
     std::cout << "Load query ids..." << std::endl;
     std::vector<Query> query_list = std::vector<Query>();
     load_query(query_file_path, query_list, true);
+
+    // for (int i=0;i<10;++i) {
+    //     for (int j=0;j<query_list[i].query_length;++j) {
+    //         std::cout << "(" << query_list[i].ids[j] << ", " << query_list[i].values[j] << ")" ;
+            
+    //     }
+    //     std::cout << std::endl;
+    // }
 
     std::cout << "Load posting list..." << std::endl;
     std::vector<Query> posting_list = std::vector<Query>();
     load_query(posting_file_path, posting_list, true);
 
+    // for (int i=0;i<10;++i) {
+    //     for (int j=0;j<posting_list[i].query_length;++j) {
+    //         std::cout << "(" << posting_list[i].ids[j] << ", " << posting_list[i].values[j] << ")" ;
+            
+    //     }
+    // }
+    // std::cout << std::endl;
+    
     std::cout << "Load splade index" << std::endl;
     InvertedIndex *splade_index = new InvertedIndex();
     splade_index->load_posting_lists(splade_index_file_path);
@@ -86,6 +98,17 @@ int main(int argc, char* argv[]){
     
     VectorSet *query_embedding = new VectorSet(query_embedding_path);
     VectorSet *corpus_embedding = new VectorSet(corpus_embedding_path);
+
+    
+
+    std::map<int, std::vector<int>*> groundtruth = std::map<int, std::vector<int>*>();
+    load_groundtruth(gt_file_path, groundtruth);
+
+
+    // Embedding* embedding0 = query_embedding->get(0);
+    // for (int i=0;i<10;++i) 
+    //     std::cout << embedding0->m_data->at(i) << " ";
+    // std::cout << std::endl;
 
     std::vector<std::vector<Item>*> result_list;
     
@@ -158,8 +181,9 @@ int main(int argc, char* argv[]){
             if (splade_min_id == spann_min_id){
                 Item item;
                 item.doc_id = has_plookup? plookup[splade_min_id]: splade_min_id;
+                // item.doc_id = splade_min_id;
                 double spann_score =  dis_func(query_embedding->get(i), corpus_embedding->get(splade_min_id));
-                // std::cout << spann_score << " " << splade_min_value << std::endl;
+                // std::cout << splade_min_value << " " << spann_score << std::endl;
                 item.scores = splade_weight * splade_min_value + spann_weight * spann_score;
                 result_queue.insert(item);
 
@@ -176,7 +200,7 @@ int main(int argc, char* argv[]){
         auto batchtime = std::chrono::duration_cast<std::chrono::milliseconds>(batchend - batchstart);
         
         total_time += batchtime.count();
-        if (i == 10) break;
+        // if (i == 10) break;
     }
     
     double sptag_time = load_sptag_time(sptag_time_list_path);
@@ -186,15 +210,15 @@ int main(int argc, char* argv[]){
     std::cout << "Average merge time: " << merge_time << " ms" << std::endl;
     std::cout << "Average time: " << sptag_time + merge_time << " ms" << std::endl;
     
-    for (int i=0; i<10; ++i) {
-        std::cout << "query: " << qlookup[i] << ", top 10: " << std::endl;
-        std::vector<Item> items = *result_list[i];
-        for (int j=0; j<10; ++j) {
-            std::cout <<  items[j].doc_id << ", " ;
-        }
-        std::cout << std::endl;
-    }
+    // for (int i=0; i<10; ++i) {
+    //     std::cout << "query: " << qlookup[i] << ", top 10: " << std::endl;
+    //     std::vector<Item> items = *result_list[i];
+    //     for (int j=0; j<10; ++j) {
+    //         std::cout <<  items[j].doc_id << "|" << items[j].scores << ", ";
+    //     }
+    //     std::cout << std::endl;
+    // }
     std::cout << "================= Evaluation ================" << std::endl;
-    evaluation_and_print(groundtruth, result_list, qlookup );
+    evaluation_and_print(groundtruth, result_list, qlookup);
     return 0;
 }

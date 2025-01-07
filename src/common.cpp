@@ -81,7 +81,7 @@ bool load_lookup(const std::string& filename, std::map<int, int>& lookup) {
     int id;
     for (int i = 0; i < num_entries; ++i) {
         file.read(reinterpret_cast<char*>(&id), sizeof(id));
-        lookup[i] = id;
+        lookup[i] = id; 
     }
     std::cout << "Finished loading lookups\n";
     return true;
@@ -109,7 +109,8 @@ double Embedding::euclidean_distance(Embedding *e1, Embedding *e2) {
 }
 double Embedding::inner_product(Embedding *e1, Embedding *e2) {
     double inner_product = 0;
-    for (int i = 0; i < e1->m_data->size(); ++i) {
+    int length = e1->m_data->size();
+    for (int i = 0; i < length; ++i) {
         inner_product += e1->m_data->at(i) * e2->m_data->at(i);
     }
     return inner_product;
