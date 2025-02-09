@@ -5,17 +5,17 @@
 
 
 
-void InvertedIndex::load_posting_lists(const std::string& filename) {
+bool InvertedIndex::load_posting_lists(const std::string& filename) {
     std::ifstream file(filename, std::ios::binary);
     if (!file) {
         std::cerr << "Unable to open file\n";
-        return;
+        return false;
     }
 
     int num_keys, total_docs;
     file.read(reinterpret_cast<char*>(&num_keys), sizeof(num_keys));
     file.read(reinterpret_cast<char*>(&total_docs), sizeof(total_docs));
-    std::cout << "Number of keys: " << num_keys << ", docs to be load:" << total_docs << std::endl;
+    // std::cout << "Number of keys: " << num_keys << ", docs to be load:" << total_docs << std::endl;
 
     for (int i = 0; i < num_keys; ++i) {
         int key, ids_size, values_size;
@@ -41,8 +41,8 @@ void InvertedIndex::load_posting_lists(const std::string& filename) {
     }
     m_total_docs = total_docs;
     file.close();
-
-    std::cout << "Total number of documents: " << total_docs << std::endl;
+    return true;
+    // std::cout << "Total number of documents: " << total_docs << std::endl;
 }
 
 std::vector<Item> InvertedIndex::retrieve(const Query& query, int topk, double threshold) {

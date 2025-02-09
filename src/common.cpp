@@ -14,7 +14,7 @@ bool load_query(const std::string& filename, std::vector<Query>& query, bool has
 
     unsigned int num_queries;
     file.read(reinterpret_cast<char*>(&num_queries), sizeof(num_queries));
-    std::cout << "Total number of queries: " << num_queries << std::endl;
+    // std::cout << "Total number of queries: " << num_queries << std::endl;
 
     for (unsigned int i = 0; i < num_queries; ++i) {
         Query query_item;
@@ -50,7 +50,7 @@ bool load_groundtruth(const std::string& filename, std::map<int, std::vector<int
 
     unsigned int num_gts;
     file.read(reinterpret_cast<char*>(&num_gts), sizeof(num_gts));
-    std::cout << "Number of groundtruths: " << num_gts << std::endl;
+    // std::cout << "Number of groundtruths: " << num_gts << std::endl;
 
     for (unsigned int i = 0; i < num_gts; ++i) {
         GroundtruthItem gt_item;
@@ -76,14 +76,14 @@ bool load_lookup(const std::string& filename, std::map<int, int>& lookup) {
     unsigned int num_entries, dim;
     file.read(reinterpret_cast<char*>(&num_entries), sizeof(num_entries));
     file.read(reinterpret_cast<char*>(&dim), sizeof(dim));
-    std::cout << "Number of lookup and dimension: " << num_entries  << ", " << dim << std::endl;
+    // std::cout << "Number of lookup and dimension: " << num_entries  << ", " << dim << std::endl;
 
     int id;
     for (int i = 0; i < num_entries; ++i) {
         file.read(reinterpret_cast<char*>(&id), sizeof(id));
         lookup[i] = id; 
     }
-    std::cout << "Finished loading lookups\n";
+    // std::cout << "Finished loading lookups\n";
     return true;
 }
 
@@ -150,15 +150,14 @@ VectorSet::VectorSet(const std::string& filename) {
 
     file.read(reinterpret_cast<char*>(&m_vector_num), sizeof(m_vector_num));
     file.read(reinterpret_cast<char*>(&m_vector_dim), sizeof(m_vector_dim));
-    std::cout << "Number of vectors: " << m_vector_num << std::endl;
-    std::cout << "Vector dimension: " << m_vector_dim << std::endl;
+    std::cout << "Vector Shape: [" << m_vector_num  << ", " << m_vector_dim << "]" << std::endl;
 
     for (unsigned int i = 0; i < m_vector_num; ++i) {
         std::vector<float> data(m_vector_dim);
         file.read(reinterpret_cast<char*>(data.data()), m_vector_dim * sizeof(float));
         m_vectors.push_back(Embedding(new std::vector<float>(data)));
     }
-    std::cout << "Finished loading vectors\n";
+    // std::cout << "Finished loading vectors\n";
 }
 
 void evaluation_and_print(std::map<int, std::vector<int>*> groundtruth, std::vector<std::vector<Item>*> result_list, std::map<int, int>& qlookup) {
@@ -225,4 +224,12 @@ double load_sptag_time(const std::string& filename){
         time_sum += time;
     }
     return 1000.0 * time_sum/total;
+}
+
+void output(const std::string msg, bool flg){
+    if(flg){
+        std::cout << "\033[32m[Success]\033[0m " << msg << std::endl;
+    }else{
+        std::cout << "\033[31m[Success]\033[0m " << msg << std::endl;
+    }
 }

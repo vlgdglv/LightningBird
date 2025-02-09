@@ -53,62 +53,39 @@ int main(int argc, char* argv[]){
         return 1;
     }
 
-    // std::cout << "Test main" << std::endl;
-    // std::cout << "Index file path: " << index_file_path << std::endl;
-    // std::cout << "Query file path: " << query_file_path << std::endl;
-    // std::cout << "Ground truth file path: " << gt_file_path << std::endl;
-
     std::map<int, int> qlookup = std::map<int, int>();
     std::map<int, int> plookup = std::map<int, int>();
     bool has_qlookup = load_lookup(qlookup_path, qlookup);
+    output("Query lookup", has_qlookup);
     bool has_plookup = load_lookup(plookup_path, plookup);
+    output("Corpus lookup", has_qlookup);
 
-    std::cout << "Load query ids..." << std::endl;
+    // std::cout << "Load query ids..." << std::endl;
     std::vector<Query> query_list = std::vector<Query>();
-    load_query(query_file_path, query_list, true);
+    bool flg = load_query(query_file_path, query_list, true);
+    output("Splade query ", flg);
 
-    // for (int i=0;i<10;++i) {
-    //     for (int j=0;j<query_list[i].query_length;++j) {
-    //         std::cout << "(" << query_list[i].ids[j] << ", " << query_list[i].values[j] << ")" ;
-            
-    //     }
-    //     std::cout << std::endl;
-    // }
-
-    std::cout << "Load posting list..." << std::endl;
+    // std::cout << "Load posting list..." << std::endl;
     std::vector<Query> posting_list = std::vector<Query>();
-    load_query(posting_file_path, posting_list, true);
+    flg = load_query(posting_file_path, posting_list, true);
+    output("SPANN query ", flg);
 
-    // for (int i=0;i<10;++i) {
-    //     for (int j=0;j<posting_list[i].query_length;++j) {
-    //         std::cout << "(" << posting_list[i].ids[j] << ", " << posting_list[i].values[j] << ")" ;
-            
-    //     }
-    // }
-    // std::cout << std::endl;
-    
-    std::cout << "Load splade index" << std::endl;
+    // std::cout << "Load splade index" << std::endl;
     InvertedIndex *splade_index = new InvertedIndex();
-    splade_index->load_posting_lists(splade_index_file_path);
+    flg = splade_index->load_posting_lists(splade_index_file_path);
+    output("Splade Inverted Index ", flg);
 
-    std::cout << "Load spann index" << std::endl;
+    // std::cout << "Load spann index" << std::endl;
     InvertedIndex *spann_index = new InvertedIndex();
-    spann_index->load_posting_lists(spann_index_file_path);
-
+    flg = spann_index->load_posting_lists(spann_index_file_path);
+    output("SPANN Inverted Index ", flg);
     
     VectorSet *query_embedding = new VectorSet(query_embedding_path);
     VectorSet *corpus_embedding = new VectorSet(corpus_embedding_path);
 
-    
-
     std::map<int, std::vector<int>*> groundtruth = std::map<int, std::vector<int>*>();
-    load_groundtruth(gt_file_path, groundtruth);
-
-
-    // Embedding* embedding0 = query_embedding->get(0);
-    // for (int i=0;i<10;++i) 
-    //     std::cout << embedding0->m_data->at(i) << " ";
-    // std::cout << std::endl;
+    flg = load_groundtruth(gt_file_path, groundtruth);
+    output("Ground truth", flg);
 
     std::vector<std::vector<Item>*> result_list;
     
@@ -116,9 +93,9 @@ int main(int argc, char* argv[]){
 
     double total_time = 0;
     for (int i=0;i<query_list.size();++i) {
-        if (i % 100 == 0) {
-            std::cout << "Processing query #" << i << std::endl;
-        }
+        // if (i % 100 == 0) {
+        //     std::cout << "Processing query #" << i << std::endl;
+        // }
         
         auto batchstart = std::chrono::high_resolution_clock::now();
 

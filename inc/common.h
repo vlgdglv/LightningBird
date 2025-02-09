@@ -171,4 +171,5 @@ double load_sptag_time(const std::string& filename);
 // void merge_posting_lists(std::vector<PostingList*>& pl1, Query& q1, 
 //                         std::vector<PostingList*>& pl2, Query& q2);
 
+void output(const std::string msg, bool flg);
 #endif
