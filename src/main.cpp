@@ -16,7 +16,7 @@ int main(int argc, char* argv[]){
     std::string gt_file_path, qlookup_path, plookup_path, dist_func;
     double splade_weight, spann_weight;
     int topk;
-    
+    int SPLADE_THR = 101;
     try {
         po::options_description desc("Allowed options");
         desc.add_options()

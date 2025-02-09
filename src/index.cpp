@@ -90,10 +90,11 @@ std::vector<Item> InvertedIndex::retrieve(const Query& query, int topk, double t
 }
 
 
-std::vector<PostingList*> InvertedIndex::retrieve_posting_lists(const Query& query){
+std::vector<PostingList*> InvertedIndex::retrieve_posting_lists(const Query& query, int ignore_thr){
     std::vector<PostingList*> result;
     for (int i=0; i<query.query_length; ++i) {
         int query_ids = query.ids[i];
+        if (query_ids < ignore_thr) {continue;}
         try{
             int posting_idx = m_key_to_idx.at(query_ids);
             result.push_back(&m_posting_lists[posting_idx]);
