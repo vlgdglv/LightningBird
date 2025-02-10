@@ -4,7 +4,7 @@ cd build
 
 BASE_DIR=/datacosmos/User/baoht/onesparse2/marcov2
 
-splade_weights=(0 0.2 0.4 0.5 0.6 0.8 1.0)
+splade_weights=( 1.0) #0 0.2 0.4 0.5 0.6 0.8
 
 for splade_weight in "${splade_weights[@]}"; do
     spann_weight=$(awk "BEGIN {print 1 - $splade_weight}")
